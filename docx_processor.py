@@ -1,9 +1,10 @@
+
 import os
 import re
 from docx import Document
 from docx.shared import Pt, RGBColor, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
-from docx.oxml import OxmlElement
+from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import qn
 from lxml import etree
 from io import BytesIO
@@ -45,7 +46,7 @@ def _get_run_properties_from_element(r_element):
 
 def extract_docx_to_xml(docx_file_path):
     """
-    Converts a DOCX file to a structured XML string, preserving content, styling, hyperlinks, and images.
+    Converts a DOCX file to a structured XML string, preserving content, styling, hyperlinks, and full image formatting.
     Returns the XML string and a dictionary containing image data.
     """
     if not os.path.exists(docx_file_path):
@@ -54,7 +55,6 @@ def extract_docx_to_xml(docx_file_path):
     doc = Document(docx_file_path)
     resume_xml = etree.Element("resume")
     images_data = {}
-    image_counter = 0
 
     for p_obj in doc.paragraphs:
         p_xml = etree.SubElement(resume_xml, "paragraph")
@@ -71,22 +71,18 @@ def extract_docx_to_xml(docx_file_path):
                 drawing = child.find('w:drawing', namespaces=ns)
                 if drawing is not None:
                     blip = drawing.find('.//a:blip', namespaces=ns)
-                    extent = drawing.find('.//wp:extent', namespaces=ns)
-                    if blip is not None and extent is not None:
+                    if blip is not None:
                         r_id = blip.get(qn('r:embed'))
-                        img_id = f"image_{image_counter}"
-                        image_counter += 1
                         if r_id and r_id in doc.part.rels:
                             image_part = doc.part.rels[r_id].target_part
-                            images_data[img_id] = {
+                            images_data[r_id] = {
                                 'bytes': image_part.blob,
                                 'content_type': image_part.content_type
                             }
                             img_xml = etree.SubElement(p_xml, "image")
-                            img_xml.set("id", img_id)
-                            img_xml.set("width", extent.get('cx'))
-                            img_xml.set("height", extent.get('cy'))
-                            img_xml.set("align", str(p_obj.alignment).split(' ')[0] if p_obj.alignment else "left")
+                            img_xml.set("r_id", r_id)
+                            drawing_str = etree.tostring(drawing).decode()
+                            img_xml.set("drawing_xml", drawing_str)
                         continue
 
                 r_xml = etree.SubElement(p_xml, "run")
@@ -137,7 +133,6 @@ def _add_hyperlink(paragraph, url, runs_data):
         run_element = OxmlElement('w:r')
         rPr = OxmlElement('w:rPr')
         if run_data['attrs'].get("bold") == "true": rPr.append(OxmlElement('w:b'))
-        # ... (add other properties) ...
         r_style = OxmlElement('w:rStyle')
         r_style.set(qn('w:val'), 'Hyperlink')
         rPr.append(r_style)
@@ -150,7 +145,7 @@ def _add_hyperlink(paragraph, url, runs_data):
 
 def create_docx_from_xml(optimized_xml_string, images_data):
     """
-    Creates a DOCX file from a structured XML string, preserving styling, hyperlinks, and re-inserting images.
+    Creates a DOCX file from a structured XML string, preserving styling, hyperlinks, and re-inserting images with full formatting.
     """
     try:
         xml_match = re.search(r'<resume>.*</resume>', optimized_xml_string, re.DOTALL)
@@ -192,15 +187,20 @@ def create_docx_from_xml(optimized_xml_string, images_data):
                         runs_data.append({'attrs': run_element.attrib, 'text': text_content})
                     if url and runs_data: _add_hyperlink(p, url, runs_data)
                 elif child.tag == 'image':
-                    img_id = child.get('id')
-                    if img_id in images_data:
-                        image_info = images_data[img_id]
-                        width = int(child.get('width', 0))
-                        height = int(child.get('height', 0))
-                        align_str = child.get('align', 'left').lower()
-                        p.alignment = alignment_map.get(align_str, WD_ALIGN_PARAGRAPH.LEFT)
+                    original_r_id = child.get('r_id')
+                    drawing_xml_str = child.get('drawing_xml')
+                    if original_r_id in images_data and drawing_xml_str:
+                        image_info = images_data[original_r_id]
+                        image_stream = BytesIO(image_info['bytes'])
                         try:
-                            image_stream = BytesIO(image_info['bytes'])
-                            p.add_run().add_picture(image_stream, width=Emu(width), height=Emu(height))
-                        except Exception: pass
+                            # Parse the drawing XML to get dimensions
+                            drawing_element = etree.fromstring(drawing_xml_str)
+                            extent = drawing_element.find('.//wp:extent', namespaces=ns)
+                            width = Emu(int(extent.get('cx')))
+                            height = Emu(int(extent.get('cy')))
+                            
+                            run = p.add_run()
+                            run.add_picture(image_stream, width=width, height=height)
+                        except (etree.XMLSyntaxError, AttributeError, ValueError, KeyError):
+                            pass # Failsafe
     return doc

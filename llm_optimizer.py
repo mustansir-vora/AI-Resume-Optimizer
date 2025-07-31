@@ -20,7 +20,7 @@ def optimize_resume_with_llm(resume_xml, job_role, job_description):
     * For `<run>` elements: `bold`, `italic`, `underline`, `strikethrough`, `font_name`, `font_size`, `font_color`.
     * For `<hyperlink>` elements: `url`.
     * For `<paragraph>` elements: `alignment`, `style`, `list_type`, `list_level`, `line_spacing`, `line_spacing_rule`, `space_before`, `space_after`.
-    * For `<image>` elements: `id`, `width`, `height`, `align`. **DO NOT MODIFY THE IMAGE TAG IN ANY WAY.**
+    * For `<image>` elements: `r_id`, `drawing_xml`. **DO NOT MODIFY THE IMAGE TAG OR ITS ATTRIBUTES IN ANY WAY.**
 
     Your ONLY allowed modification is the **text content** within the `<text>` CDATA section of a `<run>` element. You are NOT permitted to:
     * Add, remove, or modify any XML tags.
