@@ -13,47 +13,60 @@ def optimize_resume_with_llm(resume_xml, job_role, job_description):
     model = genai.GenerativeModel('gemini-2.5-flash')
 
     prompt = f"""
-    You are an expert resume optimization AI. Your primary goal is to **optimize the provided resume content to perfectly align with the given job role and description**. Focus on incorporating relevant keywords, rephrasing accomplishments to be quantifiable and impactful, and highlighting skills that match the job requirements.
+        You are an expert resume optimization AI. Your task is to optimize the provided resume content to perfectly align with a given job role and description. Your primary focus is on incorporating relevant keywords, rephrasing accomplishments to be quantifiable and impactful, and highlighting skills that match the job requirements.
 
-    **STRICT FORMATTING INSTRUCTIONS (CRITICAL):**
-    You MUST return the optimized resume content in the **EXACT SAME XML FORMAT** as provided in the input. For every XML element (e.g., `<paragraph>`, `<run>`, `<table>`, `<row>`, `<cell>`, `<hyperlink>`, `<image>`), you **MUST PRESERVE ALL ITS ORIGINAL STYLING ATTRIBUTES PRECISELY**. This includes:
-    * For `<run>` elements: `bold`, `italic`, `underline`, `strikethrough`, `font_name`, `font_size`, `font_color`.
-    * For `<hyperlink>` elements: `url`.
-    * For `<paragraph>` elements: `alignment`, `style`, `list_type`, `list_level`, `line_spacing`, `line_spacing_rule`, `space_before`, `space_after`.
-    * For `<image>` elements: `r_id`, `drawing_xml`. **DO NOT MODIFY THE IMAGE TAG OR ITS ATTRIBUTES IN ANY WAY.**
+### **STRICT OUTPUT FORMATTING INSTRUCTIONS**
 
-    Your ONLY allowed modification is the **text content** within the `<text>` CDATA section of a `<run>` element. You are NOT permitted to:
-    * Add, remove, or modify any XML tags.
-    * Add, remove, or modify any XML attributes (especially styling attributes).
-    * Change the order of elements.
-    * Generate ANY conversational text, explanations, or markdown (like ```xml) outside the single, raw XML output block.
+You MUST return the optimized resume content in two separate, clearly delimited blocks: a JSON block and an XML block.
 
-    **FINAL VERIFICATION (REPEAT 5 TIMES):**
-    Before outputting your response, you must perform the following check 5 times to ensure perfection:
-    1.  **Compare your output to the original XML, element by element.**
-    2.  **Confirm EVERY attribute from the original tags is present and unchanged in your output.**
-    3.  **Confirm NO XML tags have been added or removed.**
-    4.  **Confirm the ONLY change is the text inside the `<text><![CDATA[...]]></text>` tags.**
-    5.  **Confirm the response is ONLY the raw XML, starting with `<resume>` and ending with `</resume>`.
+**1. XML Tag and Attribute Preservation:**
+* You are NOT permitted to add, remove, or modify any XML tags.
+* You MUST preserve all original styling attributes on every XML element (e.g., `<paragraph>`, `<run>`, `<table>`, `<row>`, `<cell>`, `<hyperlink>`, `<image>`) precisely as they are.
+* For `<run>`: Preserve `bold`, `italic`, `underline`, `strikethrough`, `font_name`, `font_size`, `font_color`.
+* For `<hyperlink>`: Preserve the `url`.
+* For `<paragraph>`: Preserve `alignment`, `style`, `list_type`, `list_level`, `line_spacing`, `line_spacing_rule`, `space_before`, `space_after`.
+* For `<image>`: Preserve `r_id`, `drawing_xml`. **DO NOT modify the image tag or its attributes in any way.**
 
-    This verification is mandatory. The output must be a machine-parsable, clean XML string.
+**2. Allowed Modification:**
+* Your ONLY allowed modification is the text content within the `<text>` CDATA section of a `<run>` element.
 
-    ---
-    **Job Role:**
-    {job_role}
-
-    ---
-    **Job Description:**
-    {job_description}
-
-    ---
-    **Original Resume Content (XML Format to be Optimized):**
-    ```xml
-    {resume_xml}
+**3. Response Structure:**
+* Your response MUST be ONLY the two blocks, without any conversational text, explanations, or markdown fences.
+* The JSON block MUST start with `<GEMINI_JSON_START>` and end with `<GEMINI_JSON_END>`.
+* The XML block MUST start with `<GEMINI_XML_START>` and end with `<GEMINI_XML_END>`.
+* The JSON object MUST have the following structure:
+    ```json
+    {{
+    "strong_points": "List strong points here.",
+    "weak_points": "List weak points here.",
+    "changes_made": "Describe changes made here."
+    }}
     ```
+* The XML block MUST contain the full, unescaped XML content, starting with `<resume>` and ending with `</resume>`.
 
-    ---
-    **Your Optimized Resume Output (Raw XML - MUST be only this XML block):**
+### **MANDATORY FINAL VERIFICATION**
+
+Before generating the final output, you must internally perform the following check 5 times to ensure perfection:
+1.  Compare your optimized XML to the original XML, element by element.
+2.  Confirm EVERY attribute from the original tags is present and unchanged in your output.
+3.  Confirm NO XML tags have been added or removed.
+4.  Confirm the ONLY change is the text inside the `<text><![CDATA[...]]></text>` tags.
+5.  Confirm the response contains both the JSON and XML blocks with the correct delimiters.
+6.  Ensure the JSON is valid and properly formatted.
+
+### **INPUT DATA**
+
+---
+**Job Role:**
+{job_role}
+
+---
+**Job Description:**
+{job_description}
+
+---
+**Original Resume Content (XML Format to be Optimized):**
+{resume_xml}
     """
 
     try:

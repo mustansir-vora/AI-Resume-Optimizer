@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import json
+import re
 from docx_processor import extract_docx_to_xml, create_docx_from_xml
 from llm_optimizer import optimize_resume_with_llm
 from io import BytesIO
@@ -97,17 +99,49 @@ if optimize_button:
 
             with st.spinner("AI is optimizing your resume... This may take a moment."):
                 st.info("Sending to AI for optimization...")
-                optimized_xml = optimize_resume_with_llm(resume_xml, job_role, job_description)
+                llm_response_text = optimize_resume_with_llm(resume_xml, job_role, job_description)
 
             with st.spinner("Generating your new resume..."):
                 st.info("Generating optimized DOCX...")
-                if "<error>" in optimized_xml:
-                    st.error(f"An error occurred during optimization: {optimized_xml}")
+                if "<error>" in llm_response_text:
+                    st.error(f"An error occurred during optimization: {llm_response_text}")
                 else:
-                    images_to_use = st.session_state.get('images_data', {})
-                    optimized_doc = create_docx_from_xml(optimized_xml, images_to_use)
-                    st.session_state.optimized_doc = optimized_doc
-                    st.success("Resume optimization complete!")
+                    try:
+                        st.text(f"Raw LLM Response: {llm_response_text}") # Debugging: Print raw response
+
+                        # Extract JSON and XML from the response
+                        json_match = re.search(r"<GEMINI_JSON_START>(.*?)<GEMINI_JSON_END>", llm_response_text, re.DOTALL)
+                        xml_match = re.search(r"<GEMINI_XML_START>(.*?)<GEMINI_XML_END>", llm_response_text, re.DOTALL)
+
+                        if not json_match or not xml_match:
+                            st.error("Failed to find JSON or XML blocks in the LLM response.")
+                        else:
+                            json_str = json_match.group(1).strip()
+                            optimized_xml = xml_match.group(1).strip()
+
+                            st.text(f"Extracted JSON: {json_str}") # Debugging
+                            st.text(f"Extracted XML: {optimized_xml}") # Debugging
+
+                            llm_response_json = json.loads(json_str)
+                            strong_points = llm_response_json.get("strong_points", "N/A")
+                            weak_points = llm_response_json.get("weak_points", "N/A")
+                            changes_made = llm_response_json.get("changes_made", "N/A")
+
+                            if not optimized_xml:
+                                st.error("LLM did not return optimized XML content.")
+                            else:
+                                images_to_use = st.session_state.get('images_data', {})
+                                optimized_doc = create_docx_from_xml(optimized_xml, images_to_use)
+                                st.session_state.optimized_doc = optimized_doc
+                                st.session_state.strong_points = strong_points
+                                st.session_state.weak_points = weak_points
+                                st.session_state.changes_made = changes_made
+                                st.success("Resume optimization complete!")
+
+                    except json.JSONDecodeError as e:
+                        st.error(f"Failed to parse LLM response as JSON. Error: {e}. JSON string: {json_str}")
+                    except Exception as e:
+                        st.error(f"An error occurred during response processing: {e}")
 
         except FileNotFoundError as e:
             st.error(f"Error: {e}")
@@ -130,6 +164,18 @@ if 'optimized_doc' in st.session_state:
         file_name=f"Optimized_Resume_{download_job_role.replace(' ', '_')}.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+
+    st.markdown("--- ")
+    st.header("Optimization Summary")
+
+    with st.expander("Strong Points of Your Original Resume"): 
+        st.markdown(st.session_state.get('strong_points', 'No strong points identified.'))
+
+    with st.expander("Weak Points of Your Original Resume"): 
+        st.markdown(st.session_state.get('weak_points', 'No weak points identified.'))
+
+    with st.expander("Changes Made in Optimized Resume"): 
+        st.markdown(st.session_state.get('changes_made', 'No changes described.'))
 
 # --- Assumptions and Limitations ---
 st.sidebar.markdown("---")
