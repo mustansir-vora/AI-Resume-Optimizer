@@ -84,8 +84,8 @@ st.markdown("---")
 
 # --- Gemini API Key Check through env file....if running locally ---
 if not os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") == "YOUR_API_KEY_HERE":
-st.warning("⚠️ Please enter your Gemini API Key in the `.env` file to proceed.")
-st.stop() 
+    st.warning("⚠️ Please enter your Gemini API Key in the `.env` file to proceed.")
+    st.stop() 
 
 # --- Core Application Flow ---
 col1, col2 = st.columns([2, 3])
