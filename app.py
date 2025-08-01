@@ -82,12 +82,13 @@ st.markdown("Transform your resume to perfectly match your dream job. Upload you
 
 st.markdown("---")
 
-""" Commenting these lines for deployment over streamlit
+
+# Commenting below lines for deployment over streamlit
 # --- Gemini API Key Check through env file....if running locally ---
-if not os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") == "YOUR_API_KEY_HERE":
-    st.warning("⚠️ Please enter your Gemini API Key in the `.env` file to proceed.")
-    st.stop() 
-"""
+# if not os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") == "YOUR_API_KEY_HERE":
+# st.warning("⚠️ Please enter your Gemini API Key in the `.env` file to proceed.")
+# st.stop() 
+
 
 # --- Fetching API key through Streamlit's Secret manager ---
 if not st.secrets["GEMINI_API_KEY"] or st.secrets["GEMINI_API_KEY"] == "YOUR_API_KEY_HERE":
