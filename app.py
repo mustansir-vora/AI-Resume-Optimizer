@@ -21,25 +21,25 @@ st.markdown("""
 <style>
     .stButton>button {
         border-radius: 20px;
-        border: 1px solid #4F8BF9;
-        background-color: #4F8BF9;
-        color: white;
+        border: 1px solid #3A6DC2;
+        background-color: #FFFFFF;
+        color: black;
         transition: all 0.2s ease-in-out;
     }
     .stButton>button:hover {
-        background-color: #3A6DC2;
+        background-color: #ADD8E6;
         border: 1px solid #3A6DC2;
     }
     .stDownloadButton>button {
         border-radius: 20px;
-        border: 1px solid #28a745;
-        background-color: #28a745;
+        border: 1px solid #3A6DC2;
+        background-color: #FFFFFF;
         color: white;
         transition: all 0.2s ease-in-out;
     }
     .stDownloadButton>button:hover {
-        background-color: #218838;
-        border: 1px solid #218838;
+        background-color: #ADD8E6;
+        border: 1px solid #3A6DC2;
     }
     .st-emotion-cache-1y4p8pa {
         padding-top: 2rem;
