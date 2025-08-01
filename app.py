@@ -34,7 +34,7 @@ st.markdown("""
         border-radius: 20px;
         border: 1px solid #3A6DC2;
         background-color: #FFFFFF;
-        color: white;
+        color: black;
         transition: all 0.2s ease-in-out;
     }
     .stDownloadButton>button:hover {
