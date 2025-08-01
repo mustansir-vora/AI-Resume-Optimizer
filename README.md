@@ -69,8 +69,8 @@ pip install -r requirements.txt
 
 You'll need a Gemini API key to use this application.
 
-1.  Create a file named `.env` in the root of the project directory.
-2.  Add the following line to the `.env` file, replacing `Your_key_here` with your actual Gemini API key:
+1.  Open the file named `.env` in the root of the project directory.
+2.  Add the following line to the `.env` file, replacing `YOUR_API_KEY_HERE` with your actual Gemini API key:
 
 ```
 GEMINI_API_KEY='Your_key_here'
