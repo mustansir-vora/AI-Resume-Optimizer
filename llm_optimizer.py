@@ -20,12 +20,13 @@ def optimize_resume_with_llm(resume_xml, job_role, job_description):
 You MUST return the optimized resume content in two separate, clearly delimited blocks: a JSON block and an XML block.
 
 **1. XML Tag and Attribute Preservation:**
-* You are NOT permitted to add, remove, or modify any XML tags.
-* You MUST preserve all original styling attributes on every XML element (e.g., `<paragraph>`, `<run>`, `<table>`, `<row>`, `<cell>`, `<hyperlink>`, `<image>`) precisely as they are.
-* For `<run>`: Preserve `bold`, `italic`, `underline`, `strikethrough`, `font_name`, `font_size`, `font_color`.
+* You are NOT permitted to add, remove, or modify any XML tags. The allowed tags are `<resume>`, `<paragraph>`, `<run>`, `<hyperlink>`, `<image>`, `<table_grid>`, `<row>`, and `<cell>`.
+* You MUST preserve all original styling attributes on every XML element precisely as they are.
+* For `<run>`: Preserve `bold`, `italic`, `underline`, `strikethrough`, `font_name`, `font_size`, `font_color`, `highlight_color`.
 * For `<hyperlink>`: Preserve the `url`.
-* For `<paragraph>`: Preserve `alignment`, `style`, `list_type`, `list_level`, `line_spacing`, `line_spacing_rule`, `space_before`, `space_after`.
+* For `<paragraph>`: Preserve `alignment`, `style`, `line_spacing`, `line_spacing_rule`, `space_before`, `space_after`, `left_indent`, `right_indent`, `first_line_indent`, `list_type`, `list_level`, `shading_color`, `shading_fill`, `bottom_border_style`, `bottom_border_size`, `bottom_border_color`.
 * For `<image>`: Preserve `r_id`, `drawing_xml`. **DO NOT modify the image tag or its attributes in any way.**
+* For `<table_grid>`, `<row>`, and `<cell>`: Preserve them exactly as they appear.
 
 **2. Allowed Modification:**
 * Your ONLY allowed modification is the text content within the `<text>` CDATA section of a `<run>` element.
