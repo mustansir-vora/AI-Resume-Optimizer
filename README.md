@@ -4,10 +4,19 @@ This Streamlit web application helps you tailor your resume for specific job app
 
 ## Features
 
--   **Resume Parsing:** Extracts content and styling from `.docx` files, including text, formatting, and images.
--   **AI-Powered Optimization:** Leverages the Gemini LLM to optimize your resume content based on a provided job description.
--   **Format Preservation:** Reconstructs the `.docx` file with the optimized content while maintaining the original layout and styling.
--   **User-Friendly Interface:** A simple Streamlit interface for uploading your resume and entering job details.
+-   **Seamless `.docx` Processing:** Extracts content and styling from `.docx` files, ensuring that even complex layouts are preserved.
+-   **AI-Powered Optimization:** Leverages the Gemini LLM to intelligently rewrite and tailor your resume content based on a provided job description.
+-   **Format Preservation:** Reconstructs the `.docx` file with the optimized content while maintaining the original layout, fonts, and styling.
+-   **User-Friendly Interface:** A simple and intuitive Streamlit interface for uploading your resume, entering job details, and downloading the optimized result.
+-   **Detailed Analysis:** Provides a summary of the changes made, including strong points, weak points, and specific modifications.
+
+## How It Works
+
+1.  **Upload and Parse:** The application reads a `.docx` file and uses `lxml` to parse the underlying `document.xml`. It extracts every text element along with its unique XPath.
+2.  **AI Optimization:** The extracted text and XPaths are sent to the Gemini LLM with a detailed prompt, including the job role and description. The LLM rewrites the content to align with the job requirements.
+3.  **JSON-Formatted Response:** The LLM returns a structured JSON object containing the optimized text and the corresponding XPaths, along with an analysis of the changes.
+4.  **Reconstruction:** The application creates a new `.docx` file in memory. It iterates through the original document's structure and replaces the text at each XPath with the optimized content.
+5.  **Download:** The newly generated `.docx` file is made available for download, preserving the original formatting.
 
 ## Project Structure
 
@@ -20,17 +29,25 @@ This Streamlit web application helps you tailor your resume for specific job app
 ├── llm_optimizer.py
 ├── README.md
 ├── requirements.txt
+├── __pycache__/
+├── .devcontainer/
 └── temp/
 ```
 
--   `app.py`: The main Streamlit application file.
--   `docx_processor.py`: Handles the extraction and reconstruction of `.docx` files.
--   `llm_optimizer.py`: Contains the logic for interacting with the Gemini LLM.
--   `requirements.txt`: A list of all the dependencies required to run the project.
--   `.env`: For storing your Gemini API key.
--   `README.md`: This file.
--   `.gitignore`: Specifies which files and directories to ignore in the Git repository.
--   `temp/`: A temporary directory for storing uploaded resumes.
+### Key Components
+
+-   `app.py`: The main Streamlit application. It handles the user interface, file uploads, and orchestrates the optimization process.
+-   `docx_processor.py`: Contains the core logic for processing `.docx` files. It uses `python-docx` and `lxml` to extract text with its XPath and to replace it in a new document.
+-   `llm_optimizer.py`: Manages the interaction with the Google Gemini API. It constructs the prompt, sends the request, and processes the JSON response.
+-   `requirements.txt`: A list of all the Python dependencies required to run the project.
+-   `.env`: Used for storing the Gemini API key securely.
+-   `temp/`: A temporary directory for storing uploaded resumes during processing.
+
+## Technical Details
+
+-   **XPath for Precision:** The application uses XPath to identify the exact location of each text element in the XML structure of the `.docx` file. This allows for precise replacement of content without disrupting the document's formatting.
+-   **JSON for Structured Data:** The communication with the Gemini LLM is standardized using JSON. This ensures that the response is structured and can be reliably parsed by the application.
+-   **Error Handling:** The application includes robust error handling to manage potential issues with file processing, API communication, and JSON parsing.
 
 ## Setup and Installation
 
@@ -94,9 +111,3 @@ This will start the application, and you can access it in your web browser at `h
     -   In the "Job Description" field, paste the full job description.
 3.  **Optimize Your Resume:** Click the "Optimize Resume" button to start the optimization process.
 4.  **Download Your Optimized Resume:** Once the optimization is complete, a "Download Optimized Resume" button will appear. Click it to download your new, tailored resume.
-
-## Assumptions and Limitations
-
--   The application works best with standard resume formats.
--   Complex formatting, such as custom headers, footers, or intricate shapes, may not be perfectly preserved.
--   The quality of the optimization depends heavily on the detail of the job description provided.
