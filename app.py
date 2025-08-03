@@ -86,9 +86,12 @@ def clean_llm_json_response(response_text):
     if match:
         response_text = match.group(1)
 
-    # Find the start of the first JSON object
-    json_start = response_text.find('{')
-    if json_start != -1:
+    try:
+        # Find the start of the first JSON object
+        json_start = response_text.find('{')
+        if json_start == -1:
+            raise ValueError("No JSON object found in the response.")
+
         # Find the corresponding closing brace
         brace_count = 0
         json_end = -1
@@ -97,17 +100,26 @@ def clean_llm_json_response(response_text):
                 brace_count += 1
             elif char == '}':
                 brace_count -= 1
+            
             if brace_count == 0:
                 json_end = json_start + i + 1
                 break
-        if json_end != -1:
-            response_text = response_text[json_start:json_end]
+        
+        if json_end == -1:
+            raise ValueError("Incomplete JSON object in the response.")
 
-    # Final check for completeness
-    if not response_text.startswith('{') or not response_text.endswith('}'):
-        raise ValueError("Incomplete JSON response from LLM.")
+        # Extract the potential JSON string
+        potential_json = response_text[json_start:json_end]
+        
+        # Try to parse the extracted string
+        json.loads(potential_json)
+        
+        return potential_json
 
-    return response_text.strip()
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to decode JSON: {e}. Response text: {response_text}")
+    except ValueError as e:
+        raise e
 
 st.title("📄✨ AI-Powered Resume Optimizer")
 st.markdown("Transform your resume to perfectly match your dream job. Upload your resume, paste the job description, and let Gemini AI work its magic!")
